@@ -19,12 +19,37 @@ class ProductController extends Controller
     }
 
     /**
-     * Display a listing of the resource.
+     * @OA\Get(
+     *     path="/api/products",
+     *     tags={"Products"},
+     *     summary="Get all products for REST API",
+     *     description="Multiple status values can be provided with comma separated string",
+     *     operationId="index",
+     *     @OA\Parameter(
+     *         name="perPage",
+     *         in="query",
+     *         description="Per page product count",
+     *         required=false,
+     *         explode=true,
+     *         @OA\Schema(
+     *             default="10",
+     *             type="integer"
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="successful operation",
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Invalid status value"
+     *     )
+     * )
      */
     public function index(): JsonResponse
     {
         try {
-            return $this->responseSuccess($this->productRepository->getAll(), "Products fetched successfully");
+            return $this->responseSuccess($this->productRepository->getAll(request()->perPage), "Products fetched successfully");
         } catch (Exception $e) {
             return $this->responseError([], $e->getMessage());
         }
