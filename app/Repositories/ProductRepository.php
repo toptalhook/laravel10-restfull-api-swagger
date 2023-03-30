@@ -8,7 +8,7 @@ use Illuminate\Contracts\Pagination\Paginator;
 
 class ProductRepository implements CrudInterface
 {
-    public function getAll(int $perPage): Paginator
+    public function getAll(?int $perPage): Paginator
     {
         return Product::paginate($perPage);
     }
