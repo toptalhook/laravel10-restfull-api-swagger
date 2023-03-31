@@ -24,6 +24,17 @@ class AuthRepository
         return $this->getAuthData($user, $tokenInstance);
     }
 
+    public function register(array $data): array
+    {
+        $user = User::create($this->prepareDataForRegister($data));
+        if (!$user) {
+            throw new Exception("Sorry, User did not register, please try again", 500);
+        }
+
+        $tokenInstance = $this->createAuthToken($user);
+        return $this->getAuthData($user, $tokenInstance);
+    }
+
     public function getUserByEmail(string $email): ?User
     {
         return User::query()->where('email', $email)->first();
@@ -46,6 +57,15 @@ class AuthRepository
             'access_token' => $tokenInstance->accessToken,
             'token_type' => 'Bearer',
             'expires_at' => Carbon::parse($tokenInstance->token->expires_at)->toDateTimeString()
+        ];
+    }
+
+    public function prepareDataForRegister(array $data): array
+    {
+        return [
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'password' => Hash::make($data['password']),
         ];
     }
 }
