@@ -18,15 +18,51 @@ class ProfileController extends Controller
         $this->auth = $auth;
     }
 
+    /**
+     * @OA\Get(
+     *     path="/api/profile",
+     *     tags={"Authentication"},
+     *     summary="User profile",
+     *     description="User profile",
+     *     operationId="profile",
+     *     security={{"bearer":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="successful operation",
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated"
+     *     )
+     * )
+     */
     public function show(): JsonResponse
     {
         try {
-            return Auth::guard()->user();
+            return $this->responseSuccess(Auth::guard()->user(), 'User profile data.');
         } catch (Exception $exception) {
             return $this->responseError([], $exception->getMessage());
         }
     }
 
+    /**
+     * @OA\Post(
+     *     path="/api/logout",
+     *     tags={"Authentication"},
+     *     summary="User logout",
+     *     description="User logout",
+     *     operationId="logout",
+     *     security={{"bearer":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="successful operation",
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated"
+     *     )
+     * )
+     */
     public function logout(): JsonResponse
     {
         try {

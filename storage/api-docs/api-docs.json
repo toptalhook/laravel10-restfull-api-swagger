@@ -13,6 +13,49 @@
         "version": "1.0.0"
     },
     "paths": {
+        "/api/login": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Login to system.",
+                "description": "Login",
+                "operationId": "login",
+                "requestBody": {
+                    "description": "Pet object that needs to be added to the store",
+                    "required": true,
+                    "content": {
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "description": "User email",
+                                        "type": "string"
+                                    },
+                                    "password": {
+                                        "description": "User password",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "successful operation"
+                    },
+                    "400": {
+                        "description": "Invalid input"
+                    }
+                }
+            }
+        },
         "/api/products": {
             "get": {
                 "tags": [
@@ -25,8 +68,8 @@
                     {
                         "name": "perPage",
                         "in": "query",
-                        "description": "Status values that needed to be considered for filter",
-                        "required": true,
+                        "description": "Per page product count",
+                        "required": false,
                         "explode": true,
                         "schema": {
                             "type": "integer",
@@ -41,7 +84,125 @@
                     "400": {
                         "description": "Invalid status value"
                     }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ]
+            }
+        },
+        "/api/profile": {
+            "get": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "User profile",
+                "description": "User profile",
+                "operationId": "profile",
+                "responses": {
+                    "200": {
+                        "description": "successful operation"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ]
+            }
+        },
+        "/api/logout": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "User logout",
+                "description": "User logout",
+                "operationId": "logout",
+                "responses": {
+                    "200": {
+                        "description": "successful operation"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ]
+            }
+        },
+        "/api/register": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Register to system.",
+                "description": "Register",
+                "operationId": "register",
+                "requestBody": {
+                    "description": "Pet object that needs to be added to the store",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "email",
+                                    "password",
+                                    "password_confirmation"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "description": "User name",
+                                        "type": "string",
+                                        "example": "Hossein Abd"
+                                    },
+                                    "email": {
+                                        "description": "User email",
+                                        "type": "string",
+                                        "example": "hossein@example.test"
+                                    },
+                                    "password": {
+                                        "description": "User password",
+                                        "type": "string",
+                                        "example": "12345678"
+                                    },
+                                    "password_confirmation": {
+                                        "description": "User confirm password",
+                                        "type": "string",
+                                        "example": "12345678"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "successful operation"
+                    },
+                    "400": {
+                        "description": "Invalid input"
+                    }
                 }
+            }
+        }
+    },
+    "components": {
+        "securitySchemes": {
+            "bearer": {
+                "type": "apiKey",
+                "description": "Enter token in format (Bearer <token>)",
+                "name": "Authorization",
+                "in": "header"
             }
         }
     }

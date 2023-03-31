@@ -36,6 +36,7 @@ class ProductController extends Controller
      *             type="integer"
      *         )
      *     ),
+     *     security={{"bearer":{}}},
      *     @OA\Response(
      *         response=200,
      *         description="successful operation",
