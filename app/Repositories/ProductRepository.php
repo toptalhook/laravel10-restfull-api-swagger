@@ -5,8 +5,11 @@ namespace App\Repositories;
 use App\Interfaces\CrudInterface;
 use App\Interfaces\DBPrepareableInterface;
 use App\Models\Product;
+use Exception;
 use Illuminate\Contracts\Pagination\Paginator;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class ProductRepository implements CrudInterface, DBPrepareableInterface
@@ -17,22 +20,23 @@ class ProductRepository implements CrudInterface, DBPrepareableInterface
 
         $query = Product::query()->orderBy($filter['orderBy'], $filter['order']);
 
-        if(!empty($filter['search'])){
-            $query->where(function ($query) use ($filter){
-                $searched =  '%'.$filter['search'].'%';
+        if (!empty($filter['search'])) {
+            $query->where(function ($query) use ($filter) {
+                $searched = '%' . $filter['search'] . '%';
                 $query->where('title', 'like', $searched)
-                ->orWhere('slug', 'like', $searched);
+                    ->orWhere('slug', 'like', $searched);
             });
         }
         return $query->paginate($filter['perPage']);
     }
+
     public function getFilterData(array $filterData): array
     {
         $defaultArgs = [
-          'perPage' => 10,
-          'search' => '',
-          'orderBy' => 'id',
-          'order' => 'desc'
+            'perPage' => 10,
+            'search' => '',
+            'orderBy' => 'id',
+            'order' => 'desc'
         ];
 
         return array_merge($defaultArgs, $filterData);
@@ -40,7 +44,11 @@ class ProductRepository implements CrudInterface, DBPrepareableInterface
 
     public function getById(int $id): ?Product
     {
-        return Product::find($id);
+        $product = Product::find($id);
+        if (empty($product)) {
+            return throw new Exception("Product does not exist.", Response::HTTP_NOT_FOUND);
+        }
+        return $product;
     }
 
     public function create(array $data): ?Product
@@ -49,13 +57,37 @@ class ProductRepository implements CrudInterface, DBPrepareableInterface
         return Product::create($data);
     }
 
-    public function prepareForBD(array $data): array
+    public function update(int $id, array $data): ?Product
+    {
+        $product = $this->getById($id);
+        $updated = $product->update($this->prepareForBD($data, $product));
+        if ($updated) {
+            $product = $this->getById($id);
+        }
+        return $product;
+    }
+
+    public function delete(int $id): ?Product
+    {
+        $product = $this->getById($id);
+        $this->deleteImage($product->image_url);
+        $deleted = $product->delete($product);
+        if (!$deleted) {
+            throw new Exception("Product could not be deleted.", Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+        return $product;
+    }
+
+    public function prepareForBD(array $data, ?Product $product = null): array
     {
         if (empty($data['slug'])) {
             $data['slug'] = $this->createUniqueSlug($data['title']);
         }
 
         if (!empty($data['image'])) {
+            if (!is_null($product)) {
+                $this->deleteImage($product->image_url);
+            }
             $data['image'] = $this->uploadImage($data['image']);
         }
         $data['user_id'] = Auth::id();
@@ -70,8 +102,18 @@ class ProductRepository implements CrudInterface, DBPrepareableInterface
 
     private function uploadImage($image): string
     {
-        $imageName = time() . '.'.$image->extension();
+        $imageName = time() . '.' . $image->extension();
         $image->storePubliclyAs('public', $imageName);
         return $imageName;
+    }
+
+    private function deleteImage(?string $imageUrl): void
+    {
+        if (!empty($imageUrl)) {
+            $imageName = ltrim(strstr($imageUrl, 'storage/'), 'storage/');
+            if (!empty($imageName) && Storage::exists('public/' . $imageName)) {
+                Storage::delete('public/' . $imageName);
+            }
+        }
     }
 }
